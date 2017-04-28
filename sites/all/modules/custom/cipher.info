@@ -1,0 +1,5 @@
+name = cipher
+description = cipher to encrypt messages
+package = custom
+core = 7.x
+files[]= cipher.module

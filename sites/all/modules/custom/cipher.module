@@ -46,27 +46,11 @@ function cipher_form()
   );
   return $form;
 }
-function cipher_form_submit($form, $form_state)
-{
-  $cipher_value = $form_state['values']['cipher_value'];
-  $cipher_direction = $form_state['values']['cipher_direction'];
-  $cipher_phrase = $form_state['values']['cipher_phrase'];
-  $cipher_letters= str_split($cipher_phrase);
-  $alphabet_letters = range('a', 'z');
-  $new_letters= array();
-  foreach ($cipher_letters as $c_letter) {
-    $key = array_search ($c_letter, $alphabet_letters);
-    $new_letter= $alphabet_letters[$key + $cipher_value];
-    array_push($new_letters,$new_letter);
-  }
-
-  $_SESSION['cipher_results']= $cipher_results;
-  $form_state['redirect']= 'cipher_results';
-}
+//Element validation starts:
 function validate_right_left($element)
 {
   $value = strtolower($element['#value']);
-  if($value!== 'left' || $value!== 'right'){
+  if($value!= 'left' && $value!= 'right'){
     form_error($element, t('Input must be either "left" or "right"'));
   }
 }
@@ -76,9 +60,50 @@ function validate_phrase($element){
     form_error($element, t('Only word-characters and puntuation are allowed.'));
   }
 }
+//Element validation ends.
+
+//Beginning of Cipher Logic:
+function cipher_form_submit($form, &$form_state)
+{
+  $cipher_direction = $form_state['values']['cipher_direction'];
+  if($cipher_direction=='left'){
+    $cipher_value = -intval($form_state['values']['cipher_value']);
+  }else{
+    $cipher_value = intval($form_state['values']['cipher_value']);
+  }
+  $cipher_phrase = $form_state['values']['cipher_phrase'];
+
+  $phrase_split= str_split(strtolower($cipher_phrase));
+  $alphabet_letters = range('a', 'z');
+  $phrase_letters = array();
+  $new_letters= array();
+
+  foreach ($phrase_split as $character) {
+    if (preg_match('/^[a-zA-Z]+/', $character)) {
+      array_push($phrase_letters, $character);
+    }
+  }
+  foreach ($phrase_letters as $letter) {
+    $key = array_search ($letter, $alphabet_letters);
+   $new_key = $key + $cipher_value;
+     if($new_key>25){
+         $new_key= $new_key%26;
+     }elseif($new_key<0){
+         $new_key= 26 -(abs($new_key)%26);
+         if($new_key==26){
+           $new_key=0;
+         }
+     }
+   $new_letter= $alphabet_letters[$new_key];
+   array_push($new_letters, $new_letter);
+  }
+  $cipher_results= str_replace($phrase_letters,$new_letters, $cipher_phrase);
+  $_SESSION['cipher_results']= $cipher_results;
+  $form_state['redirect']= 'cipher_results';
+}
 
 function show_cipher()
 {
   $cipher_results= $_SESSION['cipher_results'];
-  return $cipher_results;
+  return 'Here is your encrypted message: ' .$cipher_results;
 }

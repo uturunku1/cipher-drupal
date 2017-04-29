@@ -4,7 +4,7 @@ function cipher_menu(){
   $items['cipher_form']= array(
     'title'=>'Welcome to Cipher',
     'page callback'=> 'drupal_get_form',
-    'page arguments'=> 'cipher_form',
+    'page arguments'=> array('cipher_form'),
     'access callback'=> TRUE,
     'type'=> MENU_NORMAL_ITEM,
   );
@@ -15,4 +15,70 @@ function cipher_menu(){
     'type'=> MENU_CALLBACK,
   );
   return $items;
+}
+
+function cipher_form()
+{
+  $form['cipher_value']= array(
+    '#type'=>'textfield',
+    '#title'=> 'Shift Number Value',
+    '#description'=> t('Enter the number of places to shift each letter over'),
+    '#element_validate'=>array('element_validate_integer_positive'),
+    '#required'=> TRUE,
+  );
+  $form['cipher_direction']= array(
+    '#type'=>'textfield',
+    '#title'=> 'shift direction',
+    '#description'=> 'Enter the word "right" or "left".Ex: "a" with a shift value of 1 and a direction of right would become "b"',
+    '#element_validate'=> array('validate_right_left'),
+    '#required'=> TRUE,
+  );
+  $form['cipher_phrase']= array(
+    '#type'=>'textfield',
+    '#title'=> 'Phrase',
+    '#description'=> 'Enter a phrase or sentence to be encoded',
+    '#element_validate'=> array('validate_phrase'),
+    '#required'=> TRUE,
+  );
+  $form['cipher_button']= array(
+    '#type'=>'submit',
+    '#value'=>'Encrypt this message',
+  );
+  return $form;
+}
+function cipher_form_submit($form, $form_state)
+{
+  $cipher_value = $form_state['values']['cipher_value'];
+  $cipher_direction = $form_state['values']['cipher_direction'];
+  $cipher_phrase = $form_state['values']['cipher_phrase'];
+  $cipher_letters= str_split($cipher_phrase);
+  $alphabet_letters = range('a', 'z');
+  $new_letters= array();
+  foreach ($cipher_letters as $c_letter) {
+    $key = array_search ($c_letter, $alphabet_letters);
+    $new_letter= $alphabet_letters[$key + $cipher_value];
+    array_push($new_letters,$new_letter);
+  }
+
+  $_SESSION['cipher_results']= $cipher_results;
+  $form_state['redirect']= 'cipher_results';
+}
+function validate_right_left($element)
+{
+  $value = strtolower($element['#value']);
+  if($value!== 'left' || $value!== 'right'){
+    form_error($element, t('Input must be either "left" or "right"'));
+  }
+}
+function validate_phrase($element){
+  $value = $element['#value'];
+  if (!preg_match('/^[a-zA-Z .,!?\s]+/', $value)) {
+    form_error($element, t('Only word-characters and puntuation are allowed.'));
+  }
+}
+
+function show_cipher()
+{
+  $cipher_results= $_SESSION['cipher_results'];
+  return $cipher_results;
 }

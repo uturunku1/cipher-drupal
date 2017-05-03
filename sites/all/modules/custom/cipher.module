@@ -71,15 +71,16 @@ function cipher_form_submit($form, &$form_state)
   }else{
     $cipher_value = intval($form_state['values']['cipher_value']);
   }
-  $cipher_phrase = $form_state['values']['cipher_phrase'];
+  $cipher_phrase = strtolower($form_state['values']['cipher_phrase']);
 
-  $phrase_split= str_split(strtolower($cipher_phrase));
+  $phrase_split= str_split($cipher_phrase);
   $alphabet_letters = range('a', 'z');
   $phrase_letters = array();
   $new_letters= array();
 
   foreach ($phrase_split as $character) {
-    if (preg_match('/^[a-zA-Z]+/', $character)) {
+
+    if (preg_match('/[a-zA-Z]+/', $character)) {
       array_push($phrase_letters, $character);
     }
   }
